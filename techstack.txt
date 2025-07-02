@@ -1,0 +1,28 @@
+Device: 2020 MacBook Pro M1
+OS: macOS Sequoia
+Storage: 1TB SSD
+Cursor Version: 1.1.6
+Xcode Version: 16.4
+
+Project Name: B.U.D.D.Y (Basic Utility Droid Designed for You)
+Frontend: SwiftUI (iOS & macOS)
+Backend: Node.js/Express (cloud-first, extensible)
+LLMs: Ollama (OpenHermes, Dolphin, Mistral, etc.), Hugging Face APIs
+Voice-to-Text: Hugging Face Whisper API
+Image Generation: Stable Diffusion (Hugging Face Spaces)
+Image Storage: Cloudinary (free tier)
+Memory/History: Supabase or ChromaDB (optional)
+TTS (optional): Piper TTS or Coqui TTS
+Code Formatting: Prettier (JS/TS), SwiftFormat (Swift)
+Design: Modern, sleek, visually striking UI (SwiftUI best practices)
+
+Homebrew: macOS package manager (for installing system dependencies)
+Node.js: JavaScript runtime (installed via Homebrew)
+npm: Node.js package manager (bundled with Node.js)
+Prettier: Code formatter for backend (installed as dev dependency)
+
+Backend Directory: /backend
+Backend Dependencies: Express (web server), CORS (cross-origin requests), Axios (HTTP client), dotenv (environment variables)
+Frontend: SwiftUI app scaffolded as 'BUDDYApp' using Swift Package Manager
+
+Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management 
