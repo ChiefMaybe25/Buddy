@@ -1,5 +1,5 @@
 BUDDY AI Assistant - Current Implementation Overview
-Generated on July 01, 2025
+Generated on July 01, 2025 (Updated July 2025)
 
 PROJECT STATUS (as of July 2025):
 - Project B.U.D.D.Y. is a cross-platform AI assistant for Mac and iPhone.
@@ -8,6 +8,9 @@ PROJECT STATUS (as of July 2025):
 - Images are uploaded to Cloudinary for storage and delivery.
 - The frontend is a SwiftUI app that communicates with the local backend.
 - The backend acts as a proxy, forwarding requests to appropriate services.
+- **Voice Input:** Users can speak prompts to BUDDY using the microphone button (speech-to-text).
+- **Voice Output:** BUDDY replies are spoken aloud using Apple TTS, with a replay button for each message.
+- **iOS Device Support:** App runs on real iPhones (not just simulator), with network config for local backend access.
 
 CURRENT ARCHITECTURE:
 
@@ -17,6 +20,7 @@ CURRENT ARCHITECTURE:
    - Forwards image requests to Hugging Face Space
    - Uploads generated images to Cloudinary
    - Runs with 4 workers for parallel requests
+   - Must use 0.0.0.0 for iOS device access
 
 2. LLM CHAT: Ollama running locally
    - Uses models like Mistral, TinyLlama, Phi-2
@@ -37,16 +41,17 @@ CURRENT ARCHITECTURE:
 
 5. FRONTEND: SwiftUI App
    - iOS and macOS compatible
-   - Communicates with local backend
+   - Communicates with local backend (use Mac's local IP for iOS device)
    - Displays chat responses and generated images
+   - **Voice Input/Output:** Microphone button for speech-to-text, BUDDY replies spoken aloud, replay button for each message
 
 CURRENT WORKFLOW:
 
 Chat Flow:
-- User enters prompt in SwiftUI app
+- User enters or speaks prompt in SwiftUI app
 - Backend forwards to local Ollama
 - Ollama generates response
-- Response displayed in app
+- Response displayed in app and spoken aloud
 
 Image Generation Flow:
 - User enters image prompt in SwiftUI app
@@ -63,6 +68,7 @@ Local Development:
 - Python environment with FastAPI
 - Ollama installed and running
 - Xcode for SwiftUI development
+- iPhone (iOS 18+) for device testing
 
 Cloud Services:
 - Hugging Face account (free)
@@ -75,6 +81,7 @@ CURRENT STATUS:
 - ✅ SwiftUI frontend connected
 - ✅ Cloudinary integration working
 - ✅ Backend proxy functionality working
+- ✅ Voice input/output working on iOS device
 
 TECHNICAL SPECIFICATIONS:
 
@@ -83,6 +90,7 @@ Backend (FastAPI):
 - Workers: 4 (parallel requests)
 - Dependencies: FastAPI, requests, cloudinary
 - No local ML libraries required
+- Must use 0.0.0.0 for iOS device access
 
 Ollama:
 - Port: 11434
@@ -104,9 +112,9 @@ FRONTEND SPECIFICATIONS:
 
 SwiftUI App:
 - Target: iOS and macOS
-- Network: localhost:8000 for backend
-- Features: Chat interface, image generation, modal display
-- Permissions: Network access for localhost
+- Network: Mac's local IP for backend (e.g., http://192.168.1.10:8000)
+- Features: Chat interface, image generation, modal display, voice input/output, replay button
+- Permissions: Network access for local IP, microphone, and speech recognition (Info.plist)
 
 ENVIRONMENT VARIABLES:
 - CLOUDINARY_CLOUD_NAME
@@ -118,6 +126,7 @@ DEPLOYMENT NOTES:
 - Ollama runs locally for chat
 - Image generation uses free cloud resources
 - No paid cloud services required for current setup
+- iOS device must be on same Wi-Fi as Mac
 
 FUTURE CONSIDERATIONS:
 - Containerize backend and Ollama with Docker
@@ -125,17 +134,18 @@ FUTURE CONSIDERATIONS:
 - Move environment variables to cloud host
 - Update frontend to use cloud API endpoint
 
-This implementation provides a complete, working AI assistant using free and open-source tools with local-first chat and cloud-based image generation.
+This implementation provides a complete, working AI assistant using free and open-source tools with local-first chat, cloud-based image generation, and full voice support on iOS devices.
 
 ---
 
-## July 2025 UI Update
+## July 2025 UI & Voice Update
 - Animated buddy avatar (bobbing, green glow when thinking)
 - Glowing 'please wait while I am thinking...' bubble
 - Custom app icon and avatar (droid theme)
 - Modern, card-based UI with chat bubbles and image generator
 - All assets provided at 1x, 2x, 3x for crisp display
+- Voice input/output and replay button for BUDDY messages
 
 ## Current Status
-- Fully functional chat and image generation
+- Fully functional chat, image generation, and voice features
 - Visually polished, interactive UI 
