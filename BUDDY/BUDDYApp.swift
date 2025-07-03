@@ -25,6 +25,13 @@ struct BUDDYApp: App {
     }
 }
 
+// 1. Add ChatMessage struct
+struct ChatMessage: Identifiable {
+    let id = UUID()
+    let text: String
+    let isUser: Bool
+}
+
 struct ContentView: View {
     @State private var chatPrompt: String = ""
     @State private var imagePrompt: String = ""
@@ -37,9 +44,10 @@ struct ContentView: View {
     @State private var chatError: String? = nil
     @State private var isThinking: Bool = false
     @State private var bob: Bool = false
-
-    // Placeholder for mood/status (can be dynamic later)
     @State private var buddyMood: String = "😊"
+
+    // 2. Add chatHistory array
+    @State private var chatHistory: [ChatMessage] = []
 
     var body: some View {
         ZStack {
@@ -51,156 +59,173 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 28) {
-                    // Header with avatar and welcome
-                    VStack(spacing: 8) {
-                        // Animated buddy avatar with vibrant green glow when thinking
-                        ZStack {
-                            if isThinking {
-                                Circle()
-                                    .fill(Color.green.opacity(0.35))
-                                    .frame(width: 120, height: 120)
-                                    .blur(radius: 18)
-                                Circle()
-                                    .fill(Color.green.opacity(0.25))
-                                    .frame(width: 140, height: 140)
-                                    .blur(radius: 32)
-                                Circle()
-                                    .fill(Color.green.opacity(0.18))
-                                    .frame(width: 170, height: 170)
-                                    .blur(radius: 48)
-                            }
-                            Image("buddy_avatar")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 90, height: 90)
-                                .clipShape(Circle())
-                                .shadow(radius: 8)
-                                .offset(y: bob ? -6 : 6)
-                                .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: bob)
-                        }
-                        .onAppear { bob = true }
-
-                        // Glowing bubble for thinking message
-                        if isThinking {
+            ScrollViewReader { scrollProxy in
+                ScrollView {
+                    VStack(spacing: 28) {
+                        // Header with avatar and welcome
+                        VStack(spacing: 8) {
+                            // Animated buddy avatar with vibrant green glow when thinking
                             ZStack {
-                                Capsule()
-                                    .fill(Color.green.opacity(0.18))
-                                    .frame(height: 38)
-                                    .blur(radius: 2)
-                                Capsule()
-                                    .fill(Color.green.opacity(0.28))
-                                    .frame(height: 38)
-                                    .blur(radius: 8)
-                                Text("Please wait while I am thinking...")
-                                    .font(.subheadline)
-                                    .foregroundColor(.green)
-                                    .padding(.horizontal, 18)
-                                    .padding(.vertical, 8)
+                                if isThinking {
+                                    Circle()
+                                        .fill(Color.green.opacity(0.35))
+                                        .frame(width: 120, height: 120)
+                                        .blur(radius: 18)
+                                    Circle()
+                                        .fill(Color.green.opacity(0.25))
+                                        .frame(width: 140, height: 140)
+                                        .blur(radius: 32)
+                                    Circle()
+                                        .fill(Color.green.opacity(0.18))
+                                        .frame(width: 170, height: 170)
+                                        .blur(radius: 48)
+                                }
+                                Image("buddy_avatar")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 90, height: 90)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 8)
+                                    .offset(y: bob ? -6 : 6)
+                                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: bob)
                             }
-                            .padding(.top, 2)
-                            .transition(.opacity)
+                            .onAppear { bob = true }
+
+                            // Glowing bubble for thinking message
+                            if isThinking {
+                                ZStack {
+                                    Capsule()
+                                        .fill(Color.green.opacity(0.18))
+                                        .frame(height: 38)
+                                        .blur(radius: 2)
+                                    Capsule()
+                                        .fill(Color.green.opacity(0.28))
+                                        .frame(height: 38)
+                                        .blur(radius: 8)
+                                    Text("Please wait while I am thinking...")
+                                        .font(.subheadline)
+                                        .foregroundColor(.green)
+                                        .padding(.horizontal, 18)
+                                        .padding(.vertical, 8)
+                                }
+                                .padding(.top, 2)
+                                .transition(.opacity)
+                            }
+
+                            Text("B.U.D.D.Y.")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundColor(Color(.label))
+                            Text("Your friendly AI companion")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            Text("Mood: \(buddyMood)")
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
                         }
+                        .padding(.top, 24)
+                        .animation(.easeInOut, value: isThinking)
 
-                        Text("B.U.D.D.Y.")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color(.label))
-                        Text("Your friendly AI companion")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        Text("Mood: \(buddyMood)")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                    }
-                    .padding(.top, 24)
-                    .animation(.easeInOut, value: isThinking)
+                        // 3. Chat Card with scrollable history
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Chat with B.U.D.D.Y.")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .padding(.bottom, 2)
 
-                    // Chat Card
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Chat with B.U.D.D.Y.")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 2)
-
-                        // Chat bubbles
-                        if !chatResponse.isEmpty {
-                            ChatBubble(text: chatPrompt, isUser: true)
-                            ChatBubble(text: chatResponse, isUser: false)
-                        }
-
-                        HStack {
-                            TextField("Say something...", text: $chatPrompt)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding(.vertical, 6)
-                            Button(action: sendPrompt) {
-                                if isChatLoading {
-                                    ProgressView()
-                                } else {
-                                    Text("Send")
-                                        .fontWeight(.semibold)
+                            // Chat history scrollable list
+                            ScrollView {
+                                LazyVStack(alignment: .leading, spacing: 8) {
+                                    ForEach(chatHistory) { message in
+                                        ChatBubble(text: message.text, isUser: message.isUser)
+                                            .id(message.id)
+                                    }
                                 }
                             }
-                            .disabled(isChatLoading || chatPrompt.isEmpty)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(isChatLoading || chatPrompt.isEmpty ? Color.gray.opacity(0.3) : Color.green.opacity(0.85))
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                        }
-                        if let chatError = chatError {
-                            Text(chatError)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(18)
-                    .shadow(radius: 4)
+                            .frame(maxHeight: 260)
 
-                    // Image Generator Card
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Image Generator")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 2)
-                        Text("What should I draw for you today?")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        HStack {
-                            TextField("Describe your image...", text: $imagePrompt)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding(.vertical, 6)
-                            Button(action: generateImage) {
-                                if isLoading {
-                                    ProgressView()
-                                } else {
-                                    Text("Generate")
-                                        .fontWeight(.semibold)
+                            HStack {
+                                TextField("Say something...", text: $chatPrompt)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .padding(.vertical, 6)
+                                Button(action: {
+                                    sendPrompt(scrollProxy: scrollProxy)
+                                }) {
+                                    if isChatLoading {
+                                        ProgressView()
+                                    } else {
+                                        Text("Send")
+                                            .fontWeight(.semibold)
+                                    }
                                 }
+                                .disabled(isChatLoading || chatPrompt.isEmpty)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(isChatLoading || chatPrompt.isEmpty ? Color.gray.opacity(0.3) : Color.green.opacity(0.85))
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
                             }
-                            .disabled(isLoading || imagePrompt.isEmpty)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(isLoading || imagePrompt.isEmpty ? Color.gray.opacity(0.3) : Color.blue.opacity(0.85))
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                            if let chatError = chatError {
+                                Text(chatError)
+                                    .foregroundColor(.red)
+                            }
                         }
-                        if let error = errorMessage {
-                            Text(error)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(18)
-                    .shadow(radius: 4)
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(18)
+                        .shadow(radius: 4)
 
-                    Spacer(minLength: 40)
+                        // Image Generator Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Image Generator")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .padding(.bottom, 2)
+                            Text("What should I draw for you today?")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            HStack {
+                                TextField("Describe your image...", text: $imagePrompt)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .padding(.vertical, 6)
+                                Button(action: generateImage) {
+                                    if isLoading {
+                                        ProgressView()
+                                    } else {
+                                        Text("Generate")
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                                .disabled(isLoading || imagePrompt.isEmpty)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(isLoading || imagePrompt.isEmpty ? Color.gray.opacity(0.3) : Color.blue.opacity(0.85))
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                            }
+                            if let error = errorMessage {
+                                Text(error)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(18)
+                        .shadow(radius: 4)
+
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
+                .onChange(of: chatHistory.count) { _ in
+                    // Scroll to the last message when a new one is added
+                    if let last = chatHistory.last {
+                        withAnimation {
+                            scrollProxy.scrollTo(last.id, anchor: .bottom)
+                        }
+                    }
+                }
             }
             .sheet(isPresented: $showImageModal) {
                 if let image = generatedImage {
@@ -242,9 +267,13 @@ struct ContentView: View {
         }
     }
 
-    // --- Functional code below (unchanged) ---
-
-    func sendPrompt() {
+    // 4. Update sendPrompt to use chatHistory
+    func sendPrompt(scrollProxy: ScrollViewProxy) {
+        guard !chatPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let userMessage = ChatMessage(text: chatPrompt, isUser: true)
+        chatHistory.append(userMessage)
+        let promptToSend = chatPrompt
+        chatPrompt = ""
         isChatLoading = true
         isThinking = true
         chatError = nil
@@ -253,7 +282,7 @@ struct ContentView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["prompt": chatPrompt]
+        let body = ["prompt": promptToSend]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -268,7 +297,14 @@ struct ContentView: View {
                     chatError = "Invalid response from server."
                     return
                 }
-                chatResponse = result.response
+                let buddyMessage = ChatMessage(text: result.response, isUser: false)
+                chatHistory.append(buddyMessage)
+                // Scroll to the last message
+                if let last = chatHistory.last {
+                    withAnimation {
+                        scrollProxy.scrollTo(last.id, anchor: .bottom)
+                    }
+                }
             }
         }.resume()
     }
@@ -323,6 +359,8 @@ struct ContentView: View {
         }.resume()
     }
 }
+
+
 
 
 
