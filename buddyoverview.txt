@@ -174,4 +174,45 @@ Models You Should Avoid Hosting Without Caution:
 **Policy:**
 - Only use models from the "100% Open" list for cloud/Ollama backend deployment.
 - Avoid models with custom, research-only, or ambiguous licenses for any cloud deployment.
-- This ensures legal, scalable, and commercial-friendly backend AI for BUDDY. 
+- This ensures legal, scalable, and commercial-friendly backend AI for BUDDY.
+
+# BUDDY Project Overview (2025+)
+
+## Local-First AI Assistant Workflow
+
+- **Frontend (SwiftUI app):** User enters prompt, sends to local backend (localhost or Mac IP)
+- **Backend (FastAPI/Node.js, local):** Handles API requests, routes text to Ollama (local), image to Hugging Face Space or local SD, uploads images to Cloudinary
+- **Ollama (local):** Runs LLMs (TinyLlama, Phi-2, Mistral 7B, etc.), now running and serving LLM responses at http://localhost:11434
+- **Hugging Face Space (cloud) or local SD:** For image generation
+- **Cloudinary:** Stores and delivers images
+
+### Why Local-First?
+- No cost, no cloud resource limits, full control
+- MacBook Pro (M1, 16GB) is powerful enough for LLMs and prototyping
+- Learn, experiment, and build the full pipeline end-to-end
+- Easy to migrate to cloud when ready
+
+### Migration Path
+- Containerize backend and Ollama (Docker)
+- Deploy to paid cloud server (Render, Paperspace, AWS, etc.)
+- Move environment variables/secrets to cloud host
+- Update frontend to use cloud API endpoint
+
+## Roadmap & Current Step
+- [x] Local-first pipeline: SwiftUI → Local backend → Local Ollama/Cloud APIs
+- [x] Cloudinary for image storage
+- [x] Hugging Face Space for image generation
+- [x] Ollama running locally as backend LLM service
+- [ ] Test full local pipeline (SwiftUI app → FastAPI backend → Ollama)
+- [ ] (Optional) Local Stable Diffusion
+- [ ] (Future) Containerize backend and Ollama with Docker
+- [ ] (Future) Deploy to paid cloud server
+- [ ] (Future) Update frontend to use cloud API endpoint
+
+**Current Step:**
+SwiftUI frontend and FastAPI backend are set up locally, and Ollama is running and serving LLM responses. Next: test the full local pipeline.
+
+## Notes
+- All API keys/secrets stored as environment variables
+- Local-first is best for learning, prototyping, and cost savings
+- Cloud migration is easy with Docker and environment variables 

@@ -1,6 +1,127 @@
 # B.U.D.D.Y. (Basic Utility Droid Designed for You)
 
-A cross-platform AI assistant for Mac and iPhone, built with SwiftUI frontend and cloud-based AI services.
+A cross-platform AI assistant for Mac and iPhone, built to run locally on your MacBook Pro (Apple M1, 16GB RAM) with a future-proof structure for easy cloud migration.
+
+## 🚀 Project Overview
+
+BUDDY is your personal AI assistant that can:
+- Answer questions using LLMs (Ollama, running locally)
+- Generate images using Stable Diffusion (Hugging Face Space or local SD)
+- Process text and voice input
+- **NEW: Analyze voice patterns for emotional intelligence**
+- **NEW: Provide empathetic responses based on detected emotional states**
+- **NEW: Offer mental health support and crisis detection**
+- Run on both Mac and iPhone
+- Store and deliver images via Cloudinary
+
+## 🏗️ Local-First Architecture
+
+1. **Frontend (SwiftUI app)**
+   - User enters a prompt (text or image request)
+   - Sends the prompt to the local backend (localhost or Mac IP)
+2. **Backend (FastAPI or Node.js/Express, local)**
+   - Handles API requests from the frontend
+   - Forwards text prompts to Ollama (LLM, local)
+   - Forwards image prompts to Hugging Face Space (or local SD)
+   - Uploads generated images to Cloudinary
+   - Returns answers and image URLs to the frontend
+3. **Ollama (local)**
+   - Runs LLMs (TinyLlama, Phi-2, Mistral 7B, etc.)
+   - Backend communicates via HTTP API at http://localhost:11434
+4. **Hugging Face Space (cloud) or local SD**
+   - For image generation
+5. **Cloudinary**
+   - For image storage and delivery
+
+### Diagram
+```
+SwiftUI App → Local Backend → (Text: Ollama → App) | (Image: HF Space/Local SD → Cloudinary → App)
+```
+
+## 🛠️ Local Setup Instructions
+
+1. **Install Ollama** on your Mac: https://ollama.com/download
+2. **Start Ollama** and run a model (e.g., `ollama run mistral`)
+3. **Clone this repo** and set up your backend (FastAPI or Node.js)
+4. **Install dependencies** (`pip install -r requirements.txt` or `npm install`)
+5. **Start your backend** (`uvicorn app:app --reload` or `npm run dev`)
+6. **Run the SwiftUI app** in Xcode
+7. **Set up Cloudinary account** and add your credentials to `.env`
+8. **(Optional) Set up Hugging Face Space for image generation**
+
+## 🛣️ Roadmap & Current Step
+
+### Core Features (Current)
+- [x] Local-first pipeline: SwiftUI → Local backend → Local Ollama/Cloud APIs
+- [x] Cloudinary for image storage
+- [x] Hugging Face Space for image generation
+- [x] Ollama running locally as backend LLM service
+- [ ] Test full local pipeline (SwiftUI app → FastAPI backend → Ollama)
+- [ ] (Optional) Local Stable Diffusion
+
+### Voice Analysis & Emotional Intelligence (New)
+- [ ] **Phase 1: Basic Voice Analysis**
+  - [ ] Add voice recording capabilities to SwiftUI app
+  - [ ] Implement real-time audio capture with AVAudioEngine
+  - [ ] Create voice analysis endpoint in FastAPI backend
+  - [ ] Basic emotion classification (calm, stressed, excited)
+  - [ ] Audio feature extraction (pitch, rate, volume, tremors)
+
+- [ ] **Phase 2: Emotional Intelligence**
+  - [ ] Integrate emotion detection with Ollama responses
+  - [ ] Add emotional state indicators in UI
+  - [ ] Adaptive response generation based on detected emotions
+  - [ ] Context-aware prompts for LLM (e.g., "User appears distressed")
+  - [ ] Empathetic response templates
+
+- [ ] **Phase 3: Advanced Mental Health Support**
+  - [ ] Crisis detection algorithms
+  - [ ] Emergency contact integration
+  - [ ] Professional resource recommendations
+  - [ ] Mental health disclaimers and safety features
+  - [ ] Privacy controls for voice analysis
+
+### Cloud Migration (Future)
+- [ ] Containerize backend and Ollama with Docker
+- [ ] Deploy to paid cloud server (Render, Paperspace, AWS, etc.)
+- [ ] Update frontend to use cloud API endpoint
+- [ ] Scale voice analysis for cloud deployment
+
+### Migration to Cloud
+- Containerize your backend and Ollama (Docker)
+- Deploy containers to a paid cloud server
+- Move environment variables/secrets to cloud host
+- Update frontend API endpoint
+
+## 🧠 Emotional Intelligence Features
+
+### Voice Analysis Capabilities
+- **Real-time emotion detection** from voice patterns
+- **Acoustic feature analysis**: pitch, speaking rate, volume, voice tremors
+- **Emotional state classification**: calm, stressed, excited, distressed
+- **Adaptive response generation** based on detected emotions
+
+### Mental Health Support
+- **Crisis detection** for severe emotional distress
+- **Emergency contact integration** for safety
+- **Professional resource recommendations**
+- **Privacy-first design** with local processing options
+
+### Ethical Considerations
+- **NOT a replacement for professional mental health care**
+- **Clear disclaimers** about AI limitations
+- **User consent** required for voice analysis
+- **Privacy controls** to disable emotion detection
+- **Crisis intervention** protocols for severe distress
+
+## 🔒 Security & Privacy
+- All API keys and secrets are stored as environment variables
+- No secrets in code or repo
+- **Voice data privacy**: Local processing when possible
+- **Emotional data protection**: Secure handling of sensitive information
+- **User control**: Option to disable voice analysis features
+
+## 📚 See buddyoverview.txt and techstack.txt for more details
 
 ## 🚀 Project Overview
 
@@ -57,6 +178,8 @@ BUDDY/
 - **Frontend**: SwiftUI (iOS & macOS)
 - **Backend**: FastAPI (Python) + Node.js/Express (alternative)
 - **AI Models**: Ollama (local LLMs), Stable Diffusion
+- **Voice Analysis**: AVAudioEngine, librosa, scikit-learn
+- **Emotion Detection**: Pre-trained voice emotion recognition models
 - **Cloud Services**: Cloudinary, Hugging Face Spaces
 - **Package Managers**: Homebrew, npm, Swift Package Manager
 
@@ -90,52 +213,6 @@ uvicorn app:app --host 0.0.0.0 --port 7860
 1. Open `BUDDY.xcodeproj` in Xcode
 2. Build and run on simulator or device
 3. Configure API endpoints to point to your deployed services
-
-## 🔧 API Endpoints
-
-### Image Generation Service (`app.py`)
-
-- `GET /` - API information and status
-- `GET /health` - Health check
-- `POST /generate` - Generate image from text prompt
-
-**Example Usage:**
-```bash
-curl -X POST "https://your-space-name.hf.space/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "a cute robot assistant"}'
-```
-
-**Response:**
-```json
-{
-  "url": "https://res.cloudinary.com/.../image/upload/...",
-  "prompt": "a cute robot assistant",
-  "status": "success"
-}
-```
-
-## 🎯 Features & Capabilities
-
-### ✅ Implemented
-- FastAPI image generation service
-- Cloudinary integration
-- Hugging Face Spaces deployment
-- Basic error handling and logging
-- Health monitoring endpoints
-
-### 🚧 In Progress
-- SwiftUI frontend development
-- Voice-to-text integration
-- LLM integration (Ollama/Hugging Face)
-- Cross-platform compatibility
-
-### 📋 Planned
-- Authentication system
-- Conversation history
-- Voice synthesis (TTS)
-- Advanced UI/UX features
-- Mobile app deployment
 
 ## 🔍 Troubleshooting
 
@@ -192,19 +269,29 @@ curl -X POST "https://your-space-name.hf.space/generate" \
 ## 📈 Future Enhancements
 
 1. **Advanced AI Features**
-   - Multi-modal input (text + image)
+   - Multi-modal input (text + image + voice)
    - Conversation memory and context
    - Custom AI model fine-tuning
+   - **Voice emotion recognition and adaptive responses**
 
 2. **User Experience**
    - Voice commands and responses
+   - **Real-time emotional state indicators**
+   - **Empathetic response generation**
    - Gesture-based interactions
    - Dark/light mode themes
 
-3. **Integration**
+3. **Mental Health Support**
+   - **Crisis detection and intervention**
+   - **Professional resource integration**
+   - **Emergency contact management**
+   - **Privacy controls for voice analysis**
+
+4. **Integration**
    - Calendar and reminder integration
    - File management capabilities
    - Third-party service connections
+   - **Mental health service referrals**
 
 ## 🤝 Contributing
 

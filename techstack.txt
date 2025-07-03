@@ -1,3 +1,50 @@
+Device: MacBook Pro (13-inch, 2020)
+Chip: Apple M1
+Memory: 16 GB
+Display: 13.3-inch Retina (2560 x 1600)
+Storage: 1TB SSD (892.95 GB available)
+OS: macOS Sequoia Version 15.4
+
+---
+
+# Local-First Tech Stack (2025+)
+
+Frontend: SwiftUI (iOS & macOS)
+Backend: FastAPI (Python) or Node.js/Express (local)
+LLMs: Ollama (running locally as backend LLM service, supports TinyLlama, Phi-2, Mistral 7B, etc.)
+Voice-to-Text: Hugging Face Whisper API
+Image Generation: Stable Diffusion (Hugging Face Spaces or local SD)
+Image Storage: Cloudinary (free tier)
+Memory/History: Supabase or ChromaDB (optional)
+TTS (optional): Piper TTS or Coqui TTS
+Code Formatting: Prettier (JS/TS), SwiftFormat (Swift)
+Design: Modern, sleek, visually striking UI (SwiftUI best practices)
+
+Homebrew: macOS package manager (for installing system dependencies)
+Node.js: JavaScript runtime (installed via Homebrew)
+npm: Node.js package manager (bundled with Node.js)
+Prettier: Code formatter for backend (installed as dev dependency)
+
+Backend Directory: /backend
+Backend Dependencies: Express (web server), CORS (cross-origin requests), Axios (HTTP client), dotenv (environment variables)
+Frontend: SwiftUI app scaffolded as 'BUDDYApp' using Swift Package Manager
+
+Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management
+
+---
+
+# Migration Note
+- When ready, containerize backend and Ollama with Docker
+- Deploy to a paid cloud server (Render, Paperspace, AWS, etc.)
+- Move environment variables/secrets to cloud host
+- Update frontend to use cloud API endpoint
+
+# Current Step
+- Ollama is running locally as the backend LLM service
+- Test the full local pipeline (SwiftUI app → FastAPI backend → Ollama)
+
+---
+
 Device: 2020 MacBook Pro M1
 OS: macOS Sequoia
 Storage: 1TB SSD
@@ -6,8 +53,8 @@ Xcode Version: 16.4
 
 Project Name: B.U.D.D.Y (Basic Utility Droid Designed for You)
 Frontend: SwiftUI (iOS & macOS)
-Backend: Node.js/Express (cloud-first, extensible)
-LLMs: Ollama (OpenHermes, Dolphin, Mistral, etc.), Hugging Face APIs
+Backend: Node.js/Express (cloud-first, extensible) OR FastAPI (Python)
+LLMs: Ollama (Docker, deployed on Render paid plan)
 Voice-to-Text: Hugging Face Whisper API
 Image Generation: Stable Diffusion (Hugging Face Spaces)
 Image Storage: Cloudinary (free tier)
@@ -25,4 +72,12 @@ Backend Directory: /backend
 Backend Dependencies: Express (web server), CORS (cross-origin requests), Axios (HTTP client), dotenv (environment variables)
 Frontend: SwiftUI app scaffolded as 'BUDDYApp' using Swift Package Manager
 
-Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management 
+Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management
+
+---
+
+# 2025+ Update
+- Render (paid plan) runs API and Ollama LLMs (Docker)
+- Hugging Face Space runs Stable Diffusion for image generation
+- Cloudinary stores and delivers images
+- All secrets managed via environment variables 
