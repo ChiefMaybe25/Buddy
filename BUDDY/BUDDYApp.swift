@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AVFoundation
+import Speech
 
 struct HealthResponse: Decodable {
     let status: String
@@ -45,9 +47,13 @@ struct ContentView: View {
     @State private var isThinking: Bool = false
     @State private var bob: Bool = false
     @State private var buddyMood: String = "😊"
-
-    // 2. Add chatHistory array
     @State private var chatHistory: [ChatMessage] = []
+    @State private var isRecording: Bool = false
+    @State private var speechRecognizer = SFSpeechRecognizer()
+    @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    @State private var recognitionTask: SFSpeechRecognitionTask?
+    let audioEngine = AVAudioEngine()
+    let synthesizer = AVSpeechSynthesizer()
 
     var body: some View {
         ZStack {
@@ -137,8 +143,25 @@ struct ContentView: View {
                             ScrollView {
                                 LazyVStack(alignment: .leading, spacing: 8) {
                                     ForEach(chatHistory) { message in
-                                        ChatBubble(text: message.text, isUser: message.isUser)
-                                            .id(message.id)
+                                        if message.isUser {
+                                            ChatBubble(text: message.text, isUser: true)
+                                                .id(message.id)
+                                        } else {
+                                            // BUDDY message with replay button
+                                            HStack(alignment: .center, spacing: 8) {
+                                                ChatBubble(text: message.text, isUser: false)
+                                                    .id(message.id)
+                                                Button(action: {
+                                                    speak(text: message.text)
+                                                }) {
+                                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                                        .foregroundColor(.blue)
+                                                        .padding(6)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                .help("Replay BUDDY's message")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -164,6 +187,20 @@ struct ContentView: View {
                                 .background(isChatLoading || chatPrompt.isEmpty ? Color.gray.opacity(0.3) : Color.green.opacity(0.85))
                                 .foregroundColor(.white)
                                 .cornerRadius(8)
+                                // Microphone button
+                                Button(action: {
+                                    if isRecording {
+                                        stopRecording()
+                                    } else {
+                                        requestSpeechAuthAndStart()
+                                    }
+                                }) {
+                                    Image(systemName: isRecording ? "mic.fill" : "mic")
+                                        .foregroundColor(isRecording ? .red : .blue)
+                                        .padding(8)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                .help(isRecording ? "Stop Recording" : "Speak to BUDDY")
                             }
                             if let chatError = chatError {
                                 Text(chatError)
@@ -218,7 +255,7 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                 }
-                .onChange(of: chatHistory.count) { _ in
+                .onChange(of: chatHistory.count) {
                     // Scroll to the last message when a new one is added
                     if let last = chatHistory.last {
                         withAnimation {
@@ -267,7 +304,7 @@ struct ContentView: View {
         }
     }
 
-    // 4. Update sendPrompt to use chatHistory
+    // 4. Update sendPrompt to use chatHistory and speak BUDDY's reply
     func sendPrompt(scrollProxy: ScrollViewProxy) {
         guard !chatPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         let userMessage = ChatMessage(text: chatPrompt, isUser: true)
@@ -278,7 +315,7 @@ struct ContentView: View {
         isThinking = true
         chatError = nil
         chatResponse = ""
-        guard let url = URL(string: "http://127.0.0.1:8000/chat") else { return }
+        guard let url = URL(string: "http://192.168.1.10:8000/chat") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -299,6 +336,7 @@ struct ContentView: View {
                 }
                 let buddyMessage = ChatMessage(text: result.response, isUser: false)
                 chatHistory.append(buddyMessage)
+                speak(text: result.response) // Speak BUDDY's reply
                 // Scroll to the last message
                 if let last = chatHistory.last {
                     withAnimation {
@@ -309,12 +347,97 @@ struct ContentView: View {
         }.resume()
     }
 
+    // Apple TTS: Robotic but friendly
+    func speak(text: String) {
+        let utterance = AVSpeechUtterance(string: text)
+        // Try to pick a "robotic" but friendly voice
+        if let voice = AVSpeechSynthesisVoice(language: "en-US") {
+            utterance.voice = voice
+        }
+        utterance.pitchMultiplier = 1.3 // Higher pitch for friendliness
+        utterance.rate = 0.45 // Moderate speed
+        utterance.volume = 1.0
+        // Force output to loudspeaker
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
+            try audioSession.overrideOutputAudioPort(.speaker)
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to set audio session category. Error: \(error)")
+        }
+        synthesizer.speak(utterance)
+    }
+
+    // Speech-to-text: Request permission and start
+    func requestSpeechAuthAndStart() {
+        SFSpeechRecognizer.requestAuthorization { authStatus in
+            if authStatus == .authorized {
+                startRecording()
+            } else {
+                chatError = "Speech recognition not authorized."
+            }
+        }
+    }
+
+    // Start recording and transcribing
+    func startRecording() {
+        isRecording = true
+        chatError = nil
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else {
+            chatError = "Unable to create recognition request."
+            isRecording = false
+            return
+        }
+        // Set up audio session for recording
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            chatError = "Audio session setup failed."
+            isRecording = false
+            return
+        }
+        let inputNode = audioEngine.inputNode
+        recognitionRequest.shouldReportPartialResults = true
+        recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { result, error in
+            if let result = result {
+                chatPrompt = result.bestTranscription.formattedString
+            }
+            if error != nil || (result?.isFinal ?? false) {
+                self.stopRecording()
+            }
+        }
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            recognitionRequest.append(buffer)
+        }
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+        } catch {
+            chatError = "Audio engine couldn't start."
+            isRecording = false
+        }
+    }
+
+    // Stop recording
+    func stopRecording() {
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        recognitionRequest?.endAudio()
+        recognitionTask?.cancel()
+        isRecording = false
+    }
+
     func generateImage() {
         isLoading = true
         isThinking = true
         errorMessage = nil
         generatedImage = nil
-        guard let url = URL(string: "http://127.0.0.1:8000/generate") else { return }
+        guard let url = URL(string: "http://192.168.1.10:8000/generate") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -359,6 +482,11 @@ struct ContentView: View {
         }.resume()
     }
 }
+
+
+
+
+
 
 
 
