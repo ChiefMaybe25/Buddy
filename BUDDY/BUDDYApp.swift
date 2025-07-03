@@ -36,98 +36,170 @@ struct ContentView: View {
     @State private var isChatLoading: Bool = false
     @State private var chatError: String? = nil
 
+    // Placeholder for mood/status (can be dynamic later)
+    @State private var buddyMood: String = "😊"
+
     var body: some View {
-        VStack(spacing: 24) {
-            Text("B.U.D.D.Y Assistant")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            // Chat Section
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Chat with LLM")
-                    .font(.headline)
-                TextField("Enter your prompt...", text: $chatPrompt)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                Button(action: sendPrompt) {
-                    if isChatLoading {
-                        ProgressView()
-                    } else {
-                        Text("Send to LLM")
-                            .fontWeight(.semibold)
+        ZStack {
+            // Background gradient for a soft, techy feel
+            LinearGradient(
+                gradient: Gradient(colors: [Color(.systemBlue).opacity(0.15), Color(.systemTeal).opacity(0.10)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 28) {
+                    // Header with avatar and welcome
+                    VStack(spacing: 8) {
+                        // Display the buddy_avatar asset
+                        Image("buddy_avatar")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 90, height: 90)
+                            .clipShape(Circle())
+                            .shadow(radius: 8)
+                        Text("B.U.D.D.Y.")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color(.label))
+                        Text("Your friendly AI companion")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Text("Mood: \(buddyMood)")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
                     }
-                }
-                .disabled(isChatLoading || chatPrompt.isEmpty)
-                .padding()
-                .background(Color.green.opacity(0.8))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
-                if let chatError = chatError {
-                    Text(chatError)
-                        .foregroundColor(.red)
-                }
-                if !chatResponse.isEmpty {
-                    ScrollView {
-                        Text(chatResponse)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
+                    .padding(.top, 24)
+
+                    // Chat Card
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Chat with B.U.D.D.Y.")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .padding(.bottom, 2)
+
+                        // Chat bubbles
+                        if !chatResponse.isEmpty {
+                            ChatBubble(text: chatPrompt, isUser: true)
+                            ChatBubble(text: chatResponse, isUser: false)
+                        }
+
+                        HStack {
+                            TextField("Say something...", text: $chatPrompt)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .padding(.vertical, 6)
+                            Button(action: sendPrompt) {
+                                if isChatLoading {
+                                    ProgressView()
+                                } else {
+                                    Text("Send")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .disabled(isChatLoading || chatPrompt.isEmpty)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(isChatLoading || chatPrompt.isEmpty ? Color.gray.opacity(0.3) : Color.green.opacity(0.85))
+                            .foregroundColor(.white)
                             .cornerRadius(8)
-                    }
-                    .frame(maxHeight: 150)
-                }
-            }
-            .padding(.bottom, 20)
-            
-            Divider()
-            
-            // Image Generation Section
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Image Generator")
-                    .font(.headline)
-                TextField("Enter your image prompt...", text: $imagePrompt)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                Button(action: generateImage) {
-                    if isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Generate Image")
-                            .fontWeight(.semibold)
-                    }
-                }
-                .disabled(isLoading || imagePrompt.isEmpty)
-                .padding()
-                .background(Color.blue.opacity(0.8))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
-                if let error = errorMessage {
-                    Text(error)
-                        .foregroundColor(.red)
-                }
-            }
-        }
-        .sheet(isPresented: $showImageModal) {
-            if let image = generatedImage {
-                VStack {
-                    Text("Generated Image")
-                        .font(.headline)
-                        .padding()
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .padding()
-                    Button("Close") {
-                        showImageModal = false
+                        }
+                        if let chatError = chatError {
+                            Text(chatError)
+                                .foregroundColor(.red)
+                        }
                     }
                     .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(18)
+                    .shadow(radius: 4)
+
+                    // Image Generator Card
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Image Generator")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .padding(.bottom, 2)
+                        Text("What should I draw for you today?")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        HStack {
+                            TextField("Describe your image...", text: $imagePrompt)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .padding(.vertical, 6)
+                            Button(action: generateImage) {
+                                if isLoading {
+                                    ProgressView()
+                                } else {
+                                    Text("Generate")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .disabled(isLoading || imagePrompt.isEmpty)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(isLoading || imagePrompt.isEmpty ? Color.gray.opacity(0.3) : Color.blue.opacity(0.85))
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                        }
+                        if let error = errorMessage {
+                            Text(error)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(18)
+                    .shadow(radius: 4)
+
+                    Spacer(minLength: 40)
+                }
+                .padding(.horizontal)
+            }
+            .sheet(isPresented: $showImageModal) {
+                if let image = generatedImage {
+                    VStack {
+                        Text("Generated Image")
+                            .font(.headline)
+                            .padding()
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .padding()
+                        Button("Close") {
+                            showImageModal = false
+                        }
+                        .padding()
+                    }
                 }
             }
         }
-        .padding()
     }
-    
+
+    // Chat bubble view
+    struct ChatBubble: View {
+        let text: String
+        let isUser: Bool
+
+        var body: some View {
+            HStack {
+                if isUser { Spacer() }
+                Text(text)
+                    .padding(12)
+                    .background(isUser ? Color.green.opacity(0.2) : Color.blue.opacity(0.15))
+                    .foregroundColor(.primary)
+                    .cornerRadius(14)
+                    .frame(maxWidth: 260, alignment: isUser ? .trailing : .leading)
+                if !isUser { Spacer() }
+            }
+            .padding(isUser ? .leading : .trailing, 40)
+        }
+    }
+
+    // --- Functional code below (unchanged) ---
+
     func sendPrompt() {
         isChatLoading = true
         chatError = nil
@@ -154,7 +226,7 @@ struct ContentView: View {
             }
         }.resume()
     }
-    
+
     func generateImage() {
         isLoading = true
         errorMessage = nil
