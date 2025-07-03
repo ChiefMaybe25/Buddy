@@ -14,6 +14,7 @@ for cache_dir in ["/tmp/transformers_cache", "/tmp/hf_home", "/tmp/datasets_cach
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
 
 # Import ML libraries after setting up environment
+cloudinary_available = False
 try:
     from diffusers import StableDiffusionPipeline
     import torch
@@ -21,6 +22,7 @@ try:
     from PIL import Image
     import cloudinary
     import cloudinary.uploader
+    cloudinary_available = True
 except ImportError as e:
     print(f"Import error: {e}")
     print("Some ML libraries may not be available in this environment")
@@ -49,13 +51,17 @@ except Exception as e:
     pipe = None
 
 # Cloudinary config (set your env vars in the Space settings for security)
-cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET")
-)
+if cloudinary_available:
+    cloudinary.config(
+        cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.getenv("CLOUDINARY_API_KEY"),
+        api_secret=os.getenv("CLOUDINARY_API_SECRET")
+    )
 
 class PromptRequest(BaseModel):
+    prompt: str
+
+class ChatRequest(BaseModel):
     prompt: str
 
 @app.get("/")
@@ -115,6 +121,45 @@ async def generate_image(request: PromptRequest):
     except Exception as e:
         print(f"Image generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
+
+@app.post("/chat")
+async def chat_with_ollama(request: ChatRequest):
+    """Chat endpoint that communicates with local Ollama instance"""
+    try:
+        import requests
+        import json
+        
+        # Ollama API endpoint
+        ollama_url = "http://localhost:11434/api/generate"
+        
+        # Prepare the request for Ollama
+        ollama_request = {
+            "model": "mistral",  # Using the mistral model
+            "prompt": request.prompt,
+            "stream": False
+        }
+        
+        # Send request to Ollama
+        response = requests.post(ollama_url, json=ollama_request, timeout=30)
+        response.raise_for_status()
+        
+        # Parse Ollama response
+        ollama_response = response.json()
+        generated_text = ollama_response.get("response", "Sorry, I couldn't generate a response.")
+        
+        return {
+            "response": generated_text,
+            "status": "success"
+        }
+        
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="Ollama service is not available. Please make sure Ollama is running with 'ollama run mistral'"
+        )
+    except Exception as e:
+        print(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

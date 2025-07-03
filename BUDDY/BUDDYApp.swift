@@ -26,7 +26,8 @@ struct BUDDYApp: App {
 }
 
 struct ContentView: View {
-    @State private var prompt: String = ""
+    @State private var chatPrompt: String = ""
+    @State private var imagePrompt: String = ""
     @State private var isLoading: Bool = false
     @State private var generatedImage: UIImage? = nil
     @State private var showImageModal: Bool = false
@@ -45,7 +46,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Chat with LLM")
                     .font(.headline)
-                TextField("Enter your prompt...", text: $prompt)
+                TextField("Enter your prompt...", text: $chatPrompt)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                 Button(action: sendPrompt) {
@@ -56,7 +57,7 @@ struct ContentView: View {
                             .fontWeight(.semibold)
                     }
                 }
-                .disabled(isChatLoading || prompt.isEmpty)
+                .disabled(isChatLoading || chatPrompt.isEmpty)
                 .padding()
                 .background(Color.green.opacity(0.8))
                 .foregroundColor(.white)
@@ -84,7 +85,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Image Generator")
                     .font(.headline)
-                TextField("Enter your image prompt...", text: $prompt)
+                TextField("Enter your image prompt...", text: $imagePrompt)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                 Button(action: generateImage) {
@@ -95,7 +96,7 @@ struct ContentView: View {
                             .fontWeight(.semibold)
                     }
                 }
-                .disabled(isLoading || prompt.isEmpty)
+                .disabled(isLoading || imagePrompt.isEmpty)
                 .padding()
                 .background(Color.blue.opacity(0.8))
                 .foregroundColor(.white)
@@ -135,7 +136,7 @@ struct ContentView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["prompt": prompt]
+        let body = ["prompt": chatPrompt]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -158,16 +159,33 @@ struct ContentView: View {
         isLoading = true
         errorMessage = nil
         generatedImage = nil
-        guard let url = URL(string: "http://localhost:3001/api/generate-image") else { return }
+        guard let url = URL(string: "http://localhost:8000/generate") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["prompt": prompt]
+        let body = ["prompt": imagePrompt]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
-                if let data = data, let image = UIImage(data: data) {
+                if let error = error {
+                    errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                guard let data = data else {
+                    errorMessage = "No data received from server."
+                    return
+                }
+                
+                // Try to parse as JSON first (in case of error response)
+                if let jsonResponse = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let detail = jsonResponse["detail"] as? String {
+                    errorMessage = "Server error: \(detail)"
+                    return
+                }
+                
+                // Try to load as image
+                if let image = UIImage(data: data) {
                     generatedImage = image
                     showImageModal = true
                 } else {
