@@ -73,3 +73,10 @@ Xcode Version: 16.4
 
 Project Name: B.U.D.D.Y (Basic Utility Droid Designed for You)
 Current Implementation: Local-first with cloud image generation 
+
+## July 2025 UI Update
+- Animated buddy avatar (bobbing, green glow when thinking)
+- Glowing 'please wait while I am thinking...' bubble
+- Custom app icon and avatar (droid theme)
+- Modern, card-based UI with chat bubbles and image generator
+- All assets provided at 1x, 2x, 3x for crisp display 

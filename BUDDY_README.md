@@ -1,5 +1,15 @@
 # B.U.D.D.Y. Assistant
 
+## New UI Features (July 2025)
+- Animated buddy avatar with bobbing and green glow when thinking
+- Glowing 'please wait while I am thinking...' bubble for user feedback
+- Custom app icon and avatar, themed as a friendly droid companion
+- Modern, card-based UI with chat bubbles and image generator
+
+## Current Progress
+- Fully functional chat and image generation
+- All UI and assets updated for a beautiful, interactive experience
+
 ## Overview
 B.U.D.D.Y. is a cross-platform AI assistant app with the following architecture:
 

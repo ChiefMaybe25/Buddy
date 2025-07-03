@@ -125,4 +125,17 @@ FUTURE CONSIDERATIONS:
 - Move environment variables to cloud host
 - Update frontend to use cloud API endpoint
 
-This implementation provides a complete, working AI assistant using free and open-source tools with local-first chat and cloud-based image generation. 
+This implementation provides a complete, working AI assistant using free and open-source tools with local-first chat and cloud-based image generation.
+
+---
+
+## July 2025 UI Update
+- Animated buddy avatar (bobbing, green glow when thinking)
+- Glowing 'please wait while I am thinking...' bubble
+- Custom app icon and avatar (droid theme)
+- Modern, card-based UI with chat bubbles and image generator
+- All assets provided at 1x, 2x, 3x for crisp display
+
+## Current Status
+- Fully functional chat and image generation
+- Visually polished, interactive UI 

@@ -35,6 +35,8 @@ struct ContentView: View {
     @State private var chatResponse: String = ""
     @State private var isChatLoading: Bool = false
     @State private var chatError: String? = nil
+    @State private var isThinking: Bool = false
+    @State private var bob: Bool = false
 
     // Placeholder for mood/status (can be dynamic later)
     @State private var buddyMood: String = "😊"
@@ -53,13 +55,54 @@ struct ContentView: View {
                 VStack(spacing: 28) {
                     // Header with avatar and welcome
                     VStack(spacing: 8) {
-                        // Display the buddy_avatar asset
-                        Image("buddy_avatar")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 90, height: 90)
-                            .clipShape(Circle())
-                            .shadow(radius: 8)
+                        // Animated buddy avatar with vibrant green glow when thinking
+                        ZStack {
+                            if isThinking {
+                                Circle()
+                                    .fill(Color.green.opacity(0.35))
+                                    .frame(width: 120, height: 120)
+                                    .blur(radius: 18)
+                                Circle()
+                                    .fill(Color.green.opacity(0.25))
+                                    .frame(width: 140, height: 140)
+                                    .blur(radius: 32)
+                                Circle()
+                                    .fill(Color.green.opacity(0.18))
+                                    .frame(width: 170, height: 170)
+                                    .blur(radius: 48)
+                            }
+                            Image("buddy_avatar")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 90, height: 90)
+                                .clipShape(Circle())
+                                .shadow(radius: 8)
+                                .offset(y: bob ? -6 : 6)
+                                .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: bob)
+                        }
+                        .onAppear { bob = true }
+
+                        // Glowing bubble for thinking message
+                        if isThinking {
+                            ZStack {
+                                Capsule()
+                                    .fill(Color.green.opacity(0.18))
+                                    .frame(height: 38)
+                                    .blur(radius: 2)
+                                Capsule()
+                                    .fill(Color.green.opacity(0.28))
+                                    .frame(height: 38)
+                                    .blur(radius: 8)
+                                Text("Please wait while I am thinking...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.green)
+                                    .padding(.horizontal, 18)
+                                    .padding(.vertical, 8)
+                            }
+                            .padding(.top, 2)
+                            .transition(.opacity)
+                        }
+
                         Text("B.U.D.D.Y.")
                             .font(.largeTitle)
                             .fontWeight(.bold)
@@ -72,6 +115,7 @@ struct ContentView: View {
                             .foregroundColor(.blue)
                     }
                     .padding(.top, 24)
+                    .animation(.easeInOut, value: isThinking)
 
                     // Chat Card
                     VStack(alignment: .leading, spacing: 16) {
@@ -202,6 +246,7 @@ struct ContentView: View {
 
     func sendPrompt() {
         isChatLoading = true
+        isThinking = true
         chatError = nil
         chatResponse = ""
         guard let url = URL(string: "http://127.0.0.1:8000/chat") else { return }
@@ -213,6 +258,7 @@ struct ContentView: View {
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isChatLoading = false
+                isThinking = false
                 if let error = error {
                     chatError = error.localizedDescription
                     return
@@ -229,6 +275,7 @@ struct ContentView: View {
 
     func generateImage() {
         isLoading = true
+        isThinking = true
         errorMessage = nil
         generatedImage = nil
         guard let url = URL(string: "http://127.0.0.1:8000/generate") else { return }
@@ -246,6 +293,7 @@ struct ContentView: View {
         session.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
+                isThinking = false
                 if let error = error {
                     errorMessage = "Network error: \(error.localizedDescription)"
                     return
@@ -275,4 +323,9 @@ struct ContentView: View {
         }.resume()
     }
 }
+
+
+
+
+
 

@@ -96,12 +96,13 @@ CLOUDINARY_API_SECRET=your_api_secret
 - **Images not displaying**: Verify Cloudinary credentials
 - **Backend issues**: Use `./restart_backend.sh` to restart
 
-## Current Status
+## Current Progress
 
-- ✅ Local chat pipeline working
-- ✅ Cloud image generation working
-- ✅ SwiftUI frontend connected
-- ✅ Cloudinary integration working
+- Fully functional chat and image generation pipeline
+- Custom app icon and animated avatar (Buddy) in the UI
+- Animated green glow and 'thinking' bubble when Buddy is processing
+- Modern, friendly card-based UI with chat bubbles and image generator
+- All assets are crisp for 1x, 2x, 3x resolutions
 
 ## License
 
