@@ -1,0 +1,25 @@
+# Core ML and AI libraries - pinned versions for Hugging Face Spaces compatibility
+numpy==1.24.3
+huggingface_hub==0.20.3
+diffusers==0.24.0
+transformers==4.35.2
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==2.1.2
+
+# Web framework and server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic>=2.0,<3.0
+
+# Image processing
+pillow==10.1.0
+
+# Additional utilities for stability
+accelerate==0.25.0
+safetensors==0.4.1
+
+# HTTP and utilities
+tqdm==4.66.1
+requests==2.31.0
+httpx==0.27.0 

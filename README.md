@@ -1,105 +1,107 @@
-# BUDDY Image Generation API
+# BUDDY AI Assistant
 
-A FastAPI-based image generation service for the BUDDY AI assistant, deployed on Hugging Face Spaces.
+A cross-platform AI assistant with local LLM chat and cloud-based image generation.
 
 ## Features
 
-- Stable Diffusion image generation via Hugging Face Spaces
-- Cloudinary integration for image storage
-- RESTful API endpoints
-- Health monitoring
-- Error handling and logging
+- **Local LLM Chat**: Ollama running locally for instant, private conversations
+- **Cloud Image Generation**: Stable Diffusion via Hugging Face Spaces (CPU-only)
+- **Image Storage**: Cloudinary integration for generated images
+- **Cross-Platform**: SwiftUI app for iOS and macOS
+- **Local-First**: Chat stays private on your machine
 
-## Deployment on Hugging Face Spaces
+## Architecture
 
-### 1. Create a New Space
+### Local Components (Your Mac)
+- **SwiftUI Frontend**: User interface for chat and image generation
+- **FastAPI Backend**: Lightweight proxy server (`localhost:8000`)
+- **Ollama**: Local LLM service for chat (`localhost:11434`)
 
-1. Go to [Hugging Face Spaces](https://huggingface.co/spaces)
-2. Click "Create new Space"
-3. Choose "Docker" as the SDK
-4. Set the Space name (e.g., "buddy-image-generator")
-5. Set visibility (Public or Private)
+### Cloud Components
+- **Hugging Face Space**: CPU-based image generation (`chiefmaybe-buddy-sd.hf.space`)
+- **Cloudinary**: Image storage and delivery
 
-### 2. Environment Variables
+## Setup Instructions
 
-In your Space settings, add these environment variables:
+### 1. Backend (FastAPI)
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
+# Set up Cloudinary credentials (see env.example)
+export CLOUDINARY_CLOUD_NAME=your_cloud_name
+export CLOUDINARY_API_KEY=your_api_key
+export CLOUDINARY_API_SECRET=your_api_secret
+
+# Start the backend
+./restart_backend.sh
+```
+
+### 2. Ollama (LLM Chat)
+```bash
+# Install Ollama: https://ollama.com/
+# Start the desired model
+ollama run mistral
+```
+
+### 3. SwiftUI App
+- Open `BUDDY.xcodeproj` in Xcode
+- Build and run on your device or simulator
+- App connects to backend at `http://localhost:8000`
+
+### 4. Hugging Face Space (Image Generation)
+- The Space runs in the cloud using the Docker runtime.
+- The backend is configured to send image generation requests to the public Space URL (e.g., `https://chiefmaybe-buddy-sd.hf.space/generate`).
+- **Important:** In `requirements.txt`, pin `huggingface_hub==0.19.4` for compatibility with `diffusers==0.24.0`.
+- Do **not** include `streamlit` or `xformers`.
+
+## How It Works
+
+### Chat Flow
+1. User enters prompt in SwiftUI app
+2. Backend forwards to local Ollama instance
+3. Ollama generates response
+4. Response displayed in app
+
+### Image Generation Flow
+1. User enters image prompt in SwiftUI app
+2. Backend forwards to Hugging Face Space
+3. Space generates image (5-10 minutes)
+4. Backend uploads image to Cloudinary
+5. Cloudinary URL returned to app
+6. Image displayed in app
+
+## API Endpoints
+
+- `GET /` - API information
+- `GET /health` - Health check
+- `POST /chat` - Chat with Ollama
+- `POST /generate` - Generate image via Hugging Face Space
+
+## Environment Variables
+
+Required in `env.example`:
 ```
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-### 3. Files Structure
-
-Your Space should have these files:
-- `app.py` - Main FastAPI application
-- `requirements.txt` - Python dependencies
-- `Dockerfile` - Container configuration
-- `README.md` - This file
-
-### 4. API Endpoints
-
-- `GET /` - API information and status
-- `GET /health` - Health check
-- `POST /generate` - Generate image from text prompt
-
-### 5. Usage Example
-
-```bash
-curl -X POST "https://your-space-name.hf.space/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "a beautiful sunset over mountains"}'
-```
-
-Response:
-```json
-{
-  "url": "https://res.cloudinary.com/.../image/upload/...",
-  "prompt": "a beautiful sunset over mountains",
-  "status": "success"
-}
-```
-
-## Local Development
-
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Set environment variables:
-```bash
-export CLOUDINARY_CLOUD_NAME=your_cloud_name
-export CLOUDINARY_API_KEY=your_api_key
-export CLOUDINARY_API_SECRET=your_api_secret
-```
-
-3. Run the application:
-```bash
-uvicorn app:app --host 0.0.0.0 --port 7860
-```
-
 ## Troubleshooting
 
-### Common Issues
+- **ImportError: cannot import name 'cached_download' from 'huggingface_hub'**
+  - Pin `huggingface_hub==0.19.4` in your requirements.txt and rebuild the Space.
+- **Chat not working**: Ensure Ollama is running with `ollama run mistral`
+- **Images not generating**: Check Hugging Face Space is running
+- **Images not displaying**: Verify Cloudinary credentials
+- **Backend issues**: Use `./restart_backend.sh` to restart
 
-1. **NumPy Version Conflict**: The app uses NumPy 1.24.3 to avoid compatibility issues
-2. **Cache Directory Permissions**: Cache directories are set to `/tmp/` for write access
-3. **Memory Issues**: The app uses CPU-only inference to avoid GPU memory problems
+## Current Status
 
-### Debug Endpoints
-
-- `GET /health` - Check if the pipeline loaded successfully
-- Check the Space logs for detailed error messages
-
-## Integration with BUDDY Frontend
-
-This API is designed to work with the BUDDY SwiftUI frontend. The frontend can:
-
-1. Send text prompts to `/generate`
-2. Display the returned image URL
-3. Handle errors gracefully
+- ✅ Local chat pipeline working
+- ✅ Cloud image generation working
+- ✅ SwiftUI frontend connected
+- ✅ Cloudinary integration working
 
 ## License
 

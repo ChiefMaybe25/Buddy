@@ -1,0 +1,23 @@
+# BUDDY-SD-Fast: CPU Image Generator Requirements
+# Minimal dependencies for CPU-only inference
+
+# FastAPI backend
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+requests==2.31.0
+
+# Stable Diffusion and ML libraries (CPU only)
+diffusers==0.24.0
+transformers==4.36.0
+torch==2.1.0
+torchvision==0.16.0
+huggingface_hub==0.19.4
+
+# Image processing
+pillow==10.1.0
+
+# Utilities
+numpy==1.24.3
+accelerate==0.25.0
+safetensors==0.4.1 

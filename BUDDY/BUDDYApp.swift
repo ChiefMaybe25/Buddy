@@ -132,7 +132,7 @@ struct ContentView: View {
         isChatLoading = true
         chatError = nil
         chatResponse = ""
-        guard let url = URL(string: "http://localhost:8000/chat") else { return }
+        guard let url = URL(string: "http://127.0.0.1:8000/chat") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -159,13 +159,19 @@ struct ContentView: View {
         isLoading = true
         errorMessage = nil
         generatedImage = nil
-        guard let url = URL(string: "http://localhost:8000/generate") else { return }
+        guard let url = URL(string: "http://127.0.0.1:8000/generate") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["prompt": imagePrompt]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        URLSession.shared.dataTask(with: request) { data, response, error in
+
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 2000
+        config.timeoutIntervalForResource = 2000
+        let session = URLSession(configuration: config)
+
+        session.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
                 if let error = error {
@@ -176,22 +182,25 @@ struct ContentView: View {
                     errorMessage = "No data received from server."
                     return
                 }
-                
+
                 // Try to parse as JSON first (in case of error response)
                 if let jsonResponse = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let detail = jsonResponse["detail"] as? String {
+                   let urlString = jsonResponse["url"] as? String,
+                   let imageUrl = URL(string: urlString),
+                   let imageData = try? Data(contentsOf: imageUrl),
+                   let image = UIImage(data: imageData) {
+                    generatedImage = image
+                    showImageModal = true
+                    return
+                } else if let jsonResponse = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let detail = jsonResponse["detail"] as? String {
                     errorMessage = "Server error: \(detail)"
                     return
                 }
-                
-                // Try to load as image
-                if let image = UIImage(data: data) {
-                    generatedImage = image
-                    showImageModal = true
-                } else {
-                    errorMessage = "Failed to generate image. Please try again."
-                }
+
+                errorMessage = "Failed to generate image. Please try again."
             }
         }.resume()
     }
 }
+

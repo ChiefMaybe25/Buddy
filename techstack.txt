@@ -7,41 +7,61 @@ OS: macOS Sequoia Version 15.4
 
 ---
 
-# Local-First Tech Stack (2025+)
+# BUDDY AI Assistant - Current Tech Stack (2025)
 
+## Local Components (Your Mac)
 Frontend: SwiftUI (iOS & macOS)
-Backend: FastAPI (Python) or Node.js/Express (local)
-LLMs: Ollama (running locally as backend LLM service, supports TinyLlama, Phi-2, Mistral 7B, etc.)
-Voice-to-Text: Hugging Face Whisper API
-Image Generation: Stable Diffusion (Hugging Face Spaces or local SD)
+Backend: FastAPI (Python) running locally on localhost:8000
+LLMs: Ollama (running locally on localhost:11434, supports Mistral, TinyLlama, Phi-2)
+Image Generation: Hugging Face Space (CPU-based, cloud)
 Image Storage: Cloudinary (free tier)
-Memory/History: Supabase or ChromaDB (optional)
-TTS (optional): Piper TTS or Coqui TTS
 Code Formatting: Prettier (JS/TS), SwiftFormat (Swift)
 Design: Modern, sleek, visually striking UI (SwiftUI best practices)
 
+## Cloud Components
+Hugging Face Space: CPU-based image generation (chiefmaybe-buddy-sd.hf.space)
+Cloudinary: Image storage and CDN delivery
+
+## Development Tools
 Homebrew: macOS package manager (for installing system dependencies)
 Node.js: JavaScript runtime (installed via Homebrew)
 npm: Node.js package manager (bundled with Node.js)
 Prettier: Code formatter for backend (installed as dev dependency)
+Miniconda: conda 25.5.1 (Apple Silicon) - Python environment management
 
+## Backend Configuration
 Backend Directory: /backend
-Backend Dependencies: Express (web server), CORS (cross-origin requests), Axios (HTTP client), dotenv (environment variables)
+Backend Dependencies: FastAPI, requests, cloudinary, uvicorn
 Frontend: SwiftUI app scaffolded as 'BUDDYApp' using Swift Package Manager
+Workers: 4 (parallel/concurrent requests)
+Port: 8000
 
-Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management
+## Current Architecture
+SwiftUI App → Local FastAPI Backend → Local Ollama (chat) / Hugging Face Space (images) → Cloudinary (storage)
 
----
+## Environment Variables
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 
-# Migration Note
-- When ready, containerize backend and Ollama with Docker
-- Deploy to a paid cloud server (Render, Paperspace, AWS, etc.)
+## Current Status
+- ✅ Local chat pipeline working (SwiftUI → FastAPI → Ollama)
+- ✅ Cloud image generation working (SwiftUI → FastAPI → Hugging Face Space → Cloudinary)
+- ✅ SwiftUI frontend connected
+- ✅ Cloudinary integration working
+- ✅ Backend proxy functionality working
+
+## Performance Specifications
+Chat Response Time: < 5 seconds (local Ollama)
+Image Generation Time: 5-10 minutes (CPU-based Hugging Face Space)
+Backend Startup: < 10 seconds (no ML libraries)
+Memory Usage: Minimal (lightweight proxy)
+
+## Future Migration Path
+- Containerize backend and Ollama with Docker
+- Deploy to paid cloud server (Render, Paperspace, AWS, etc.)
 - Move environment variables/secrets to cloud host
 - Update frontend to use cloud API endpoint
-
-# Current Step
-- Ollama is running locally as the backend LLM service
-- Test the full local pipeline (SwiftUI app → FastAPI backend → Ollama)
 
 ---
 
@@ -52,32 +72,4 @@ Cursor Version: 1.1.6
 Xcode Version: 16.4
 
 Project Name: B.U.D.D.Y (Basic Utility Droid Designed for You)
-Frontend: SwiftUI (iOS & macOS)
-Backend: Node.js/Express (cloud-first, extensible) OR FastAPI (Python)
-LLMs: Ollama (Docker, deployed on Render paid plan)
-Voice-to-Text: Hugging Face Whisper API
-Image Generation: Stable Diffusion (Hugging Face Spaces)
-Image Storage: Cloudinary (free tier)
-Memory/History: Supabase or ChromaDB (optional)
-TTS (optional): Piper TTS or Coqui TTS
-Code Formatting: Prettier (JS/TS), SwiftFormat (Swift)
-Design: Modern, sleek, visually striking UI (SwiftUI best practices)
-
-Homebrew: macOS package manager (for installing system dependencies)
-Node.js: JavaScript runtime (installed via Homebrew)
-npm: Node.js package manager (bundled with Node.js)
-Prettier: Code formatter for backend (installed as dev dependency)
-
-Backend Directory: /backend
-Backend Dependencies: Express (web server), CORS (cross-origin requests), Axios (HTTP client), dotenv (environment variables)
-Frontend: SwiftUI app scaffolded as 'BUDDYApp' using Swift Package Manager
-
-Miniconda: conda 25.5.1 (Apple Silicon) - Python environment and ML tools management
-
----
-
-# 2025+ Update
-- Render (paid plan) runs API and Ollama LLMs (Docker)
-- Hugging Face Space runs Stable Diffusion for image generation
-- Cloudinary stores and delivers images
-- All secrets managed via environment variables 
+Current Implementation: Local-first with cloud image generation 

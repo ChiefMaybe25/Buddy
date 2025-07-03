@@ -1,218 +1,128 @@
-Prompt to Build a Free AI Assistant App (B.U.D.D.Y.) Using Cursor AI,
-Ollama, and Cloud Tools
+BUDDY AI Assistant - Current Implementation Overview
 Generated on July 01, 2025
-This prompt is designed to help you use Cursor AI to build your own Buddy-like AI assistant entirely
-for free. It integrates local or cloud-based LLMs, image generation, voice-to-text, and a mobile
-frontend, all using free-tier or open-source tools.
 
-PROJECT PROGRESS SUMMARY (as of July 2025):
-- Project B.U.D.D.Y. is being developed as a cross-platform AI assistant for Mac and iPhone.
-- The backend is designed to use open-source LLMs (Ollama) and Stable Diffusion for image generation.
-- Voice-to-text is planned via Whisper.cpp or iOS Speech API.
-- The image delivery pipeline is set up to upload generated images to Cloudinary, with the frontend displaying images from Cloudinary URLs.
-- The frontend is being built to forward prompts to the backend and display both text and image responses in a modal container.
-- The backend API is being developed with FastAPI for easy integration and deployment.
-- Requirements and compatibility are being carefully managed to avoid runtime errors, especially with diffusers and huggingface_hub versions.
-- The project is structured for cloud deployment, with a focus on free-tier and open-source tools.
+PROJECT STATUS (as of July 2025):
+- Project B.U.D.D.Y. is a cross-platform AI assistant for Mac and iPhone.
+- The backend uses open-source LLMs (Ollama) running locally for chat.
+- Image generation is handled by a single Hugging Face Space (CPU-based).
+- Images are uploaded to Cloudinary for storage and delivery.
+- The frontend is a SwiftUI app that communicates with the local backend.
+- The backend acts as a proxy, forwarding requests to appropriate services.
 
-PROMPT FOR CURSOR AI:
-You are an expert developer helping me create a personal AI assistant app (like
-Buddy from Iron Man), using only free or open-source technologies. The app
-should be accessible from my iPhone and Mac, run in the cloud (no local
-always-on server required), and respond to voice or typed prompts. It must also
-generate images on request.
-Here's what I need you to build, step-by-step:
-1. BACKEND: Deploy a small open-source LLM (like OpenHermes, Dolphin, or
-Mistral) using Ollama and host it on a free-tier cloud platform (Fly.io, Hugging
-Face Spaces, or Render).
-- Use CPU-based models to avoid GPU costs
-- Include endpoints for chat prompt input and output
-2. SPEECH-TO-TEXT: Add Whisper.cpp or iOS voice recognition API for free
-voice-to-text.
-- Integrate this into the mobile app for live prompting
-3. IMAGE GENERATION: Integrate Stable Diffusion hosted on Hugging Face Spaces
-(free) or locally using InvokeAI for testing.
-- When the user prompts for an image, the backend should call the Stable
-Diffusion API and return a generated image
-4. IMAGE DELIVERY: Upload images to Cloudinary using their free tier.
-- Automatically create modals in the app frontend to display the image
-- No URL clicking required-images should display inline
-5. FRONTEND: Use React Native or Expo to build a mobile app interface.
-- Must work on iPhone
-- Voice or text input should trigger backend API
-- Display assistant's text and image responses directly in the UI
-6. CLOUD-BASED B.U.D.D.Y.: Ensure the entire system runs on a cloud backend so I can
-prompt Buddy from anywhere, anytime, without needing my Mac to be on.
-7. OPTIONAL: Add authentication via Clerk.dev or Supabase (free tiers) and store
-basic prompt history or image log.
-Additional Notes:
-- Include configuration for automatic deployment and basic error handling
-- Keep everything in a single GitHub repo and provide a one-command launch
-(Docker or shell script)
+CURRENT ARCHITECTURE:
 
-Building a Local AI Assistant App with Ollama + Stable Diffusion
-Overview:
-You can build a cross-platform (Mac + iPhone) AI assistant app that runs Ollama as the backend
-LLM, with optional Stable Diffusion image generation—all without needing to use the Terminal for
-day-to-day tasks.
-Tools You'll Use:
-- Cursor AI: Writes code for you, scaffolds Swift/Xcode projects.
-- Ollama: Local LLM backend (e.g., Dolphin, Mistral).
-- Stable Diffusion: Local image generation (e.g., via DiffusionBee).
-- Whisper or Apple Speech API: For voice input.
-- Xcode: To compile and run your Mac/iOS app.
-Basic Architecture:
-1. Mac runs:
-- Ollama (on localhost:11434)
-- Stable Diffusion (via DiffusionBee or web UI like InvokeAI)
-2. iPhone app (Swift) sends text or voice prompts to your Mac via local network.
-3. The app receives responses from Ollama or images from SD and displays them.
-4. Optional: Use a tiny local API (Node.js or Python) as an intermediary.
-Features Your App Can Have:
-- A clean chat UI (like ChatGPT) that communicates with Ollama.
-- Button to toggle between text or voice input (via Whisper or native iOS API).
-- Image generator tab: Sends prompts to Stable Diffusion and shows results.
-- Settings screen: Choose LLM model, switch to creative/image mode, etc.
-Feasibility:
-- YES: Cursor AI can generate most of this scaffolding automatically.
-- YES: Ollama works perfectly on M1/M2 Macs.
-- YES: DiffusionBee works locally and integrates easily.
-- Caveat: iPhones can't run Ollama/SD locally, so must use Wi-Fi to connect to Mac.
-Next Steps:
-1. Use Cursor AI to scaffold a Swift app that uses URLSession to send requests to localhost.
-2. Set up Ollama with a lightweight model like dolphin-mistral.
-3. Install DiffusionBee or another SD variant and make it accessible via a port.
-4. Integrate Whisper for voice commands, or use iOS Speech framework.
-5. Optionally, deploy a lightweight API to handle prompt routing from app to models.
-Result:
-An offline/private AI assistant that runs on your Mac and is controllable via app UI on your phone or
-desktop—complete with image generation, memory features, and local voice control.
+1. BACKEND: FastAPI (Python) running locally
+   - Acts as a lightweight proxy server
+   - Forwards chat requests to local Ollama
+   - Forwards image requests to Hugging Face Space
+   - Uploads generated images to Cloudinary
+   - Runs with 4 workers for parallel requests
 
-How to Build Your Own Buddy-Style AI Assistant
-This guide outlines how to create your own Buddy-style AI assistant that runs locally, remembers
-your conversations, uses your voice, and can help you build complex projects like a video game.
-1. STACK OVERVIEW
-Component | Purpose | Tools
-----------------------|-----------------------------------------|-------------------------------------
-Ollama | Local AI engine | Runs open-source LLMs locally
-Cursor AI | Development assistant | VSCode-based AI pair programmer
-Memory Layer | Store conversations | JSON, ChromaDB, or Pinecone
-Voice Input | Convert speech to text | Whisper.cpp or Vosk
-Voice Output (TTS) | AI responds with voice | Piper TTS or Coqui TTS
-App Interface | Deploy as mobile/Mac app | Xcode (SwiftUI) or Electron
-2. FLOW
-- You speak into a mic.
-- Whisper transcribes your voice into text.
-- The text is sent to an LLM running in Ollama.
-- A memory retriever provides context from previous chats.
-- The model responds.
-- Piper reads the reply out loud.
-- You interact with it via an app built with Xcode or Electron.
-3. FEATURES
-- Offline, fully private AI assistant.
-- Memory persistence: chat logs stored and injected into prompts.
-- Natural speech interaction using your voice.
-- Ability to respond with speech (custom voices possible).
-- Fully customizable personality and behavior.
-- Capable of writing code, giving advice, or controlling systems.
-4. MOBILE DEPLOYMENT
-- Use Xcode to create an iOS/macOS app.
-- App connects to backend running on Mac or local server.
-- Local APIs or sockets pass audio/text between components.
-- Optionally use TestFlight to deploy on your phone.
-5. TOOLS REQUIRED
-- Ollama (ollama.ai)
-- Whisper.cpp (local speech recognition)
-- Piper TTS (voice synthesis)
-- Cursor AI (code IDE assistant)
-- Xcode (iOS/macOS app development)
-- LangChain or custom scripts for memory
-6. BONUS
-- Long-term memory possible with embeddings (ChromaDB).
-- You can add personalized tools, like web browsing, timers, reminders.
-- Your assistant can evolve into a fully in-game NPC or GM with voice.
-With persistence and a solid understanding of how these tools interact, even a non-coder can build
-a robust, AI-powered personal assistant that lives on their desktop and mobile device.
+2. LLM CHAT: Ollama running locally
+   - Uses models like Mistral, TinyLlama, Phi-2
+   - Runs on localhost:11434
+   - Provides instant, private chat responses
+   - No cloud costs or dependencies
 
-AMENDMENT (July 2025):
+3. IMAGE GENERATION: Hugging Face Space
+   - Single CPU-based space for image generation
+   - URL: https://chiefmaybe-buddy-sd.hf.space/generate
+   - Generation time: 5-10 minutes
+   - Free tier hosting
 
-**Cloudinary Usage Policy:**
-- Cloudinary must only be used for storage and delivery of images generated by the backend (e.g., Stable Diffusion on Hugging Face Spaces).
-- Do NOT use Cloudinary's image transformation features (such as resizing, cropping, filtering, or any URL-based or API-based image manipulations).
-- All image processing and generation must be performed in the backend environment (Hugging Face, local, or other AI service), not in Cloudinary.
-- This is to avoid unnecessary credit usage and to keep Cloudinary usage within the free tier limits.
+4. IMAGE STORAGE: Cloudinary
+   - Stores generated images
+   - Provides CDN delivery
+   - Free tier usage
 
-**Build Plan for Image Generation Spaces:**
-- The current pipeline uses a Docker-based Hugging Face Space with CPU-only hardware for maximum backend flexibility and custom FastAPI integration.
-- ZeroGPU is not available for Docker Spaces; it is only available for Gradio/Streamlit SDK Spaces.
-- After the full frontend (SwiftUI) implementation is complete and the main framework is working, we will:
-  1. Attempt to build a new Gradio-based Space using ZeroGPU for much faster image generation.
-  2. Use the Gradio/ZeroGPU Space as the primary image generation endpoint if stable.
-  3. Retain the Docker/CPU Space as a backup for reliability and fallback.
-- Previous attempts to use Gradio/ZeroGPU had dependency/version conflicts with our pinned requirements. We will revisit this after the main app is functional, and may need to adjust requirements or use a simplified pipeline for the Gradio version.
-- This approach ensures we have a robust, flexible, and scalable system with both fast and reliable options.
+5. FRONTEND: SwiftUI App
+   - iOS and macOS compatible
+   - Communicates with local backend
+   - Displays chat responses and generated images
 
-**Open-Source LLMs for Ollama & Oracle Cloud (Mandatory Reading for Backend Model Selection):**
+CURRENT WORKFLOW:
 
-Models That Are 100% Open and Can Be Hosted Freely on Oracle Cloud:
-- **Mistral** (Apache 2.0): Top-tier open model, cloud/commercial use allowed
-- **Mixtral** (Apache 2.0): Mixture of Experts, high efficiency, cloud/commercial use allowed
-- **Gemma (2B/7B)** (Apache 2.0): Compact Google model, cloud/commercial use allowed
-- **Phi-2** (MIT): Fast, CPU-friendly, cloud/commercial use allowed
-- **TinyLlama** (Apache 2.0): Ultra-light, efficient, cloud/commercial use allowed
-- **Orca Mini** (Apache 2.0): Distilled/optimized, cloud/commercial use allowed
-- **OpenChat** (Apache 2.0): Chat-finetuned, cloud/commercial use allowed
-- **LLaVA** (Apache 2.0): Text+vision, cloud/commercial use allowed
-- **Dolphin-Mistral** (MIT/Apache): Chat-optimized Mistral, cloud/commercial use allowed
+Chat Flow:
+- User enters prompt in SwiftUI app
+- Backend forwards to local Ollama
+- Ollama generates response
+- Response displayed in app
 
-Models You Should Avoid Hosting Without Caution:
-- **LLaMA 2** (Meta custom): Research-only, not fully open, cloud hosting NOT allowed
-- **CodeLLaMA** (Meta): Same as LLaMA 2, restricted use
-- **Qwen** (Alibaba): No commercial/redistribution rights, cloud hosting NOT allowed
-- **DeepSeek** (Custom): Ambiguous licensing, cloud hosting unclear
+Image Generation Flow:
+- User enters image prompt in SwiftUI app
+- Backend forwards to Hugging Face Space
+- Space generates image (5-10 minutes)
+- Backend uploads image to Cloudinary
+- Cloudinary URL returned to app
+- Image displayed in app
 
-**Policy:**
-- Only use models from the "100% Open" list for cloud/Ollama backend deployment.
-- Avoid models with custom, research-only, or ambiguous licenses for any cloud deployment.
-- This ensures legal, scalable, and commercial-friendly backend AI for BUDDY.
+SETUP REQUIREMENTS:
 
-# BUDDY Project Overview (2025+)
+Local Development:
+- MacBook Pro M1 (16GB RAM recommended)
+- Python environment with FastAPI
+- Ollama installed and running
+- Xcode for SwiftUI development
 
-## Local-First AI Assistant Workflow
+Cloud Services:
+- Hugging Face account (free)
+- Cloudinary account (free tier)
+- Environment variables for Cloudinary credentials
 
-- **Frontend (SwiftUI app):** User enters prompt, sends to local backend (localhost or Mac IP)
-- **Backend (FastAPI/Node.js, local):** Handles API requests, routes text to Ollama (local), image to Hugging Face Space or local SD, uploads images to Cloudinary
-- **Ollama (local):** Runs LLMs (TinyLlama, Phi-2, Mistral 7B, etc.), now running and serving LLM responses at http://localhost:11434
-- **Hugging Face Space (cloud) or local SD:** For image generation
-- **Cloudinary:** Stores and delivers images
+CURRENT STATUS:
+- ✅ Local chat pipeline working
+- ✅ Cloud image generation working
+- ✅ SwiftUI frontend connected
+- ✅ Cloudinary integration working
+- ✅ Backend proxy functionality working
 
-### Why Local-First?
-- No cost, no cloud resource limits, full control
-- MacBook Pro (M1, 16GB) is powerful enough for LLMs and prototyping
-- Learn, experiment, and build the full pipeline end-to-end
-- Easy to migrate to cloud when ready
+TECHNICAL SPECIFICATIONS:
 
-### Migration Path
-- Containerize backend and Ollama (Docker)
-- Deploy to paid cloud server (Render, Paperspace, AWS, etc.)
-- Move environment variables/secrets to cloud host
+Backend (FastAPI):
+- Port: 8000
+- Workers: 4 (parallel requests)
+- Dependencies: FastAPI, requests, cloudinary
+- No local ML libraries required
+
+Ollama:
+- Port: 11434
+- Models: Mistral, TinyLlama, Phi-2 (open source)
+- Local processing only
+
+Hugging Face Space:
+- Runtime: Docker
+- Hardware: CPU
+- Model: Stable Diffusion v1.4
+- Timeout: 33 minutes
+
+Cloudinary:
+- Usage: Image storage only
+- No transformations or manipulations
+- Free tier limits
+
+FRONTEND SPECIFICATIONS:
+
+SwiftUI App:
+- Target: iOS and macOS
+- Network: localhost:8000 for backend
+- Features: Chat interface, image generation, modal display
+- Permissions: Network access for localhost
+
+ENVIRONMENT VARIABLES:
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
+
+DEPLOYMENT NOTES:
+- Backend runs locally for development
+- Ollama runs locally for chat
+- Image generation uses free cloud resources
+- No paid cloud services required for current setup
+
+FUTURE CONSIDERATIONS:
+- Containerize backend and Ollama with Docker
+- Deploy to paid cloud server when ready
+- Move environment variables to cloud host
 - Update frontend to use cloud API endpoint
 
-## Roadmap & Current Step
-- [x] Local-first pipeline: SwiftUI → Local backend → Local Ollama/Cloud APIs
-- [x] Cloudinary for image storage
-- [x] Hugging Face Space for image generation
-- [x] Ollama running locally as backend LLM service
-- [ ] Test full local pipeline (SwiftUI app → FastAPI backend → Ollama)
-- [ ] (Optional) Local Stable Diffusion
-- [ ] (Future) Containerize backend and Ollama with Docker
-- [ ] (Future) Deploy to paid cloud server
-- [ ] (Future) Update frontend to use cloud API endpoint
-
-**Current Step:**
-SwiftUI frontend and FastAPI backend are set up locally, and Ollama is running and serving LLM responses. Next: test the full local pipeline.
-
-## Notes
-- All API keys/secrets stored as environment variables
-- Local-first is best for learning, prototyping, and cost savings
-- Cloud migration is easy with Docker and environment variables 
+This implementation provides a complete, working AI assistant using free and open-source tools with local-first chat and cloud-based image generation. 
